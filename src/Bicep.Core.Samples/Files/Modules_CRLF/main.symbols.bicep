@@ -159,7 +159,7 @@ module nestedModuleLoop 'modulea.bicep' = [for module in myModules: {
   name: module.name
   params: {
     arrayParam: [for i in range(0,3): concat('test-', i, '-', module.name)]
-//@[21:22) Local i. Type: any. Declaration start char: 21, length: 1
+//@[21:22) Local i. Type: int. Declaration start char: 21, length: 1
     objParam: module
     stringParamB: module.location
   }

@@ -1089,12 +1089,12 @@ resource missingFewerRequiredProperties 'Microsoft.Storage/storageAccounts@2019-
 
 // wrong property inside the nested property loop
 resource wrongPropertyInNestedLoop 'Microsoft.Network/virtualNetworks@2020-06-01' = [for i in range(0, 3): {
-//@[89:90) Local i. Type: any. Declaration start char: 89, length: 1
+//@[89:90) Local i. Type: int. Declaration start char: 89, length: 1
 //@[9:34) Resource wrongPropertyInNestedLoop. Type: Microsoft.Network/virtualNetworks@2020-06-01[]. Declaration start char: 0, length: 262
   name: 'vnet-${i}'
   properties: {
     subnets: [for j in range(0, 4): {
-//@[18:19) Local j. Type: any. Declaration start char: 18, length: 1
+//@[18:19) Local j. Type: int. Declaration start char: 18, length: 1
       doesNotExist: 'test'
       name: 'subnet-${i}-${j}'
     }]
