@@ -6326,14 +6326,14 @@ resource propertyLoopsCannotNest 'Microsoft.Storage/storageAccounts@2019-06-01' 
 // property loops cannot be nested (even more nesting)
 //@[54:56) NewLine |\r\n|
 resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01' = [for account in storageAccounts: {
-//@[0:487) ResourceDeclarationSyntax
+//@[0:720) ResourceDeclarationSyntax
 //@[0:8)  Identifier |resource|
 //@[9:33)  IdentifierSyntax
 //@[9:33)   Identifier |propertyLoopsCannotNest2|
 //@[34:80)  StringSyntax
 //@[34:80)   StringComplete |'Microsoft.Storage/storageAccounts@2019-06-01'|
 //@[81:82)  Assignment |=|
-//@[83:487)  ForSyntax
+//@[83:720)  ForSyntax
 //@[83:84)   LeftSquare |[|
 //@[84:87)   Identifier |for|
 //@[88:95)   LocalVariableSyntax
@@ -6344,7 +6344,7 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
 //@[99:114)    IdentifierSyntax
 //@[99:114)     Identifier |storageAccounts|
 //@[114:115)   Colon |:|
-//@[116:486)   ObjectSyntax
+//@[116:719)   ObjectSyntax
 //@[116:117)    LeftBrace |{|
 //@[117:119)    NewLine |\r\n|
   name: account.name
@@ -6401,28 +6401,29 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
 //@[8:19)      StringComplete |'StorageV2'|
 //@[19:21)    NewLine |\r\n|
   properties: {
-//@[2:250)    ObjectPropertySyntax
+//@[2:483)    ObjectPropertySyntax
 //@[2:12)     IdentifierSyntax
 //@[2:12)      Identifier |properties|
 //@[12:13)     Colon |:|
-//@[14:250)     ObjectSyntax
+//@[14:483)     ObjectSyntax
 //@[14:15)      LeftBrace |{|
-//@[15:19)      NewLine |\r\n\r\n|
-
+//@[15:17)      NewLine |\r\n|
+    // #completionTest(17) -> symbolsPlusAccount
+//@[48:50)      NewLine |\r\n|
     networkAcls: {
-//@[4:226)      ObjectPropertySyntax
+//@[4:411)      ObjectPropertySyntax
 //@[4:15)       IdentifierSyntax
 //@[4:15)        Identifier |networkAcls|
 //@[15:16)       Colon |:|
-//@[17:226)       ObjectSyntax
+//@[17:411)       ObjectSyntax
 //@[17:18)        LeftBrace |{|
 //@[18:20)        NewLine |\r\n|
       virtualNetworkRules: [for rule in []: {
-//@[6:199)        ObjectPropertySyntax
+//@[6:384)        ObjectPropertySyntax
 //@[6:25)         IdentifierSyntax
 //@[6:25)          Identifier |virtualNetworkRules|
 //@[25:26)         Colon |:|
-//@[27:199)         ForSyntax
+//@[27:384)         ForSyntax
 //@[27:28)          LeftSquare |[|
 //@[28:31)          Identifier |for|
 //@[32:36)          LocalVariableSyntax
@@ -6433,9 +6434,11 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
 //@[40:41)           LeftSquare |[|
 //@[41:42)           RightSquare |]|
 //@[42:43)          Colon |:|
-//@[44:198)          ObjectSyntax
+//@[44:383)          ObjectSyntax
 //@[44:45)           LeftBrace |{|
 //@[45:47)           NewLine |\r\n|
+        // #completionTest(12,15,31) -> symbolsPlusRule
+//@[55:57)           NewLine |\r\n|
         id: '${account.name}-${account.location}'
 //@[8:49)           ObjectPropertySyntax
 //@[8:10)            IdentifierSyntax
@@ -6461,11 +6464,11 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
 //@[47:49)             StringRightPiece |}'|
 //@[49:51)           NewLine |\r\n|
         state: [for state in []: {
-//@[8:91)           ObjectPropertySyntax
+//@[8:219)           ObjectPropertySyntax
 //@[8:13)            IdentifierSyntax
 //@[8:13)             Identifier |state|
 //@[13:14)            Colon |:|
-//@[15:91)            ForSyntax
+//@[15:219)            ForSyntax
 //@[15:16)             LeftSquare |[|
 //@[16:19)             Identifier |for|
 //@[20:25)             LocalVariableSyntax
@@ -6476,9 +6479,11 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
 //@[29:30)              LeftSquare |[|
 //@[30:31)              RightSquare |]|
 //@[31:32)             Colon |:|
-//@[33:90)             ObjectSyntax
+//@[33:218)             ObjectSyntax
 //@[33:34)              LeftBrace |{|
 //@[34:36)              NewLine |\r\n|
+          // #completionTest(38) -> symbolsPlusAccountRuleStateSomething #completionTest(16,34) -> symbolsPlusAccountRuleState
+//@[126:128)              NewLine |\r\n|
           fake: [for something in []: true]
 //@[10:43)              ObjectPropertySyntax
 //@[10:14)               IdentifierSyntax
@@ -6678,14 +6683,14 @@ resource stuffs 'Microsoft.Storage/storageAccounts@2019-06-01' = [for account in
 // using the same loop variable in a new language scope should be allowed
 //@[73:75) NewLine |\r\n|
 resource premiumStorages 'Microsoft.Storage/storageAccounts@2019-06-01' = [for account in storageAccounts: {
-//@[0:271) ResourceDeclarationSyntax
+//@[0:321) ResourceDeclarationSyntax
 //@[0:8)  Identifier |resource|
 //@[9:24)  IdentifierSyntax
 //@[9:24)   Identifier |premiumStorages|
 //@[25:71)  StringSyntax
 //@[25:71)   StringComplete |'Microsoft.Storage/storageAccounts@2019-06-01'|
 //@[72:73)  Assignment |=|
-//@[74:271)  ForSyntax
+//@[74:321)  ForSyntax
 //@[74:75)   LeftSquare |[|
 //@[75:78)   Identifier |for|
 //@[79:86)   LocalVariableSyntax
@@ -6696,9 +6701,11 @@ resource premiumStorages 'Microsoft.Storage/storageAccounts@2019-06-01' = [for a
 //@[90:105)    IdentifierSyntax
 //@[90:105)     Identifier |storageAccounts|
 //@[105:106)   Colon |:|
-//@[107:270)   ObjectSyntax
+//@[107:320)   ObjectSyntax
 //@[107:108)    LeftBrace |{|
 //@[108:110)    NewLine |\r\n|
+  // #completionTest(7,8) -> symbolsPlusAccount2
+//@[48:50)    NewLine |\r\n|
   name: account.name
 //@[2:20)    ObjectPropertySyntax
 //@[2:6)     IdentifierSyntax

@@ -286,6 +286,7 @@ module missingFewerLoopBodyProperties 'modulea.bicep' = [for x in emptyArray: {
 
 // wrong parameter in the module loop
 module wrongModuleParameterInLoop 'modulea.bicep' = [for x in emptyArray: {
+  // #completionTest(17) -> symbolsPlusX
   name: 'hello-${x}'
   params: {
     arrayParam: []

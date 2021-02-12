@@ -2041,14 +2041,14 @@ module missingFewerLoopBodyProperties 'modulea.bicep' = [for x in emptyArray:{
 // wrong parameter in the module loop
 //@[37:38) NewLine |\n|
 module wrongModuleParameterInLoop 'modulea.bicep' = [for x in emptyArray:{
-//@[0:222) ModuleDeclarationSyntax
+//@[0:263) ModuleDeclarationSyntax
 //@[0:6)  Identifier |module|
 //@[7:33)  IdentifierSyntax
 //@[7:33)   Identifier |wrongModuleParameterInLoop|
 //@[34:49)  StringSyntax
 //@[34:49)   StringComplete |'modulea.bicep'|
 //@[50:51)  Assignment |=|
-//@[52:222)  ForSyntax
+//@[52:263)  ForSyntax
 //@[52:53)   LeftSquare |[|
 //@[53:56)   Identifier |for|
 //@[57:58)   LocalVariableSyntax
@@ -2059,9 +2059,11 @@ module wrongModuleParameterInLoop 'modulea.bicep' = [for x in emptyArray:{
 //@[62:72)    IdentifierSyntax
 //@[62:72)     Identifier |emptyArray|
 //@[72:73)   Colon |:|
-//@[73:221)   ObjectSyntax
+//@[73:262)   ObjectSyntax
 //@[73:74)    LeftBrace |{|
 //@[74:75)    NewLine |\n|
+  // #completionTest(17) -> symbolsPlusX
+//@[40:41)    NewLine |\n|
   name: 'hello-${x}'
 //@[2:20)    ObjectPropertySyntax
 //@[2:6)     IdentifierSyntax

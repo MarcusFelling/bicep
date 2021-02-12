@@ -417,7 +417,8 @@ module missingFewerLoopBodyProperties 'modulea.bicep' = [for x in emptyArray:{
 // wrong parameter in the module loop
 module wrongModuleParameterInLoop 'modulea.bicep' = [for x in emptyArray:{
 //@[57:58) Local x. Type: any. Declaration start char: 57, length: 1
-//@[7:33) Module wrongModuleParameterInLoop. Type: module[]. Declaration start char: 0, length: 222
+//@[7:33) Module wrongModuleParameterInLoop. Type: module[]. Declaration start char: 0, length: 263
+  // #completionTest(17) -> symbolsPlusX
   name: 'hello-${x}'
   params: {
     arrayParam: []

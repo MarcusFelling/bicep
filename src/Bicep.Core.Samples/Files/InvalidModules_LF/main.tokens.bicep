@@ -1349,6 +1349,8 @@ module wrongModuleParameterInLoop 'modulea.bicep' = [for x in emptyArray:{
 //@[72:73) Colon |:|
 //@[73:74) LeftBrace |{|
 //@[74:75) NewLine |\n|
+  // #completionTest(17) -> symbolsPlusX
+//@[40:41) NewLine |\n|
   name: 'hello-${x}'
 //@[2:6) Identifier |name|
 //@[6:7) Colon |:|

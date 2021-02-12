@@ -890,10 +890,13 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
   }
   kind: 'StorageV2'
   properties: {
+    // #completionTest(17) -> symbolsPlusAccount
     networkAcls: {
       virtualNetworkRules: [for rule in []: {
+        // #completionTest(12,15,31) -> symbolsPlusRule
         id: '${account.name}-${account.location}'
         state: [for state in []: {
+          // #completionTest(38) -> symbolsPlusAccountRuleStateSomething #completionTest(16,34) -> symbolsPlusAccountRuleState
           fake: [for something in []: true]
         }]
       }]
@@ -920,6 +923,7 @@ resource stuffs 'Microsoft.Storage/storageAccounts@2019-06-01' = [for account in
 
 // using the same loop variable in a new language scope should be allowed
 resource premiumStorages 'Microsoft.Storage/storageAccounts@2019-06-01' = [for account in storageAccounts: {
+  // #completionTest(7,8) -> symbolsPlusAccount2
   name: account.name
   location: account.location
   sku: {

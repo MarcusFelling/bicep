@@ -1229,12 +1229,14 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
   }
   kind: 'StorageV2'
   properties: {
-
+    // #completionTest(17) -> symbolsPlusAccount
     networkAcls: {
       virtualNetworkRules: [for rule in []: {
+        // #completionTest(12,15,31) -> symbolsPlusRule
         id: '${account.name}-${account.location}'
         state: [for state in []: {
 //@[16:19) [BCP139 (Error)] Property value for-expressions cannot be nested. |for|
+          // #completionTest(38) -> symbolsPlusAccountRuleStateSomething #completionTest(16,34) -> symbolsPlusAccountRuleState
           fake: [for something in []: true]
 //@[17:20) [BCP139 (Error)] Property value for-expressions cannot be nested. |for|
         }]
@@ -1265,6 +1267,7 @@ resource stuffs 'Microsoft.Storage/storageAccounts@2019-06-01' = [for account in
 // using the same loop variable in a new language scope should be allowed
 resource premiumStorages 'Microsoft.Storage/storageAccounts@2019-06-01' = [for account in storageAccounts: {
 //@[90:105) [BCP057 (Error)] The name "storageAccounts" does not exist in the current context. |storageAccounts|
+  // #completionTest(7,8) -> symbolsPlusAccount2
   name: account.name
   location: account.location
   sku: {

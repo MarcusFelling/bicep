@@ -4158,8 +4158,9 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
 //@[2:12) Identifier |properties|
 //@[12:13) Colon |:|
 //@[14:15) LeftBrace |{|
-//@[15:19) NewLine |\r\n\r\n|
-
+//@[15:17) NewLine |\r\n|
+    // #completionTest(17) -> symbolsPlusAccount
+//@[48:50) NewLine |\r\n|
     networkAcls: {
 //@[4:15) Identifier |networkAcls|
 //@[15:16) Colon |:|
@@ -4177,6 +4178,8 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
 //@[42:43) Colon |:|
 //@[44:45) LeftBrace |{|
 //@[45:47) NewLine |\r\n|
+        // #completionTest(12,15,31) -> symbolsPlusRule
+//@[55:57) NewLine |\r\n|
         id: '${account.name}-${account.location}'
 //@[8:10) Identifier |id|
 //@[10:11) Colon |:|
@@ -4202,6 +4205,8 @@ resource propertyLoopsCannotNest2 'Microsoft.Storage/storageAccounts@2019-06-01'
 //@[31:32) Colon |:|
 //@[33:34) LeftBrace |{|
 //@[34:36) NewLine |\r\n|
+          // #completionTest(38) -> symbolsPlusAccountRuleStateSomething #completionTest(16,34) -> symbolsPlusAccountRuleState
+//@[126:128) NewLine |\r\n|
           fake: [for something in []: true]
 //@[10:14) Identifier |fake|
 //@[14:15) Colon |:|
@@ -4349,6 +4354,8 @@ resource premiumStorages 'Microsoft.Storage/storageAccounts@2019-06-01' = [for a
 //@[105:106) Colon |:|
 //@[107:108) LeftBrace |{|
 //@[108:110) NewLine |\r\n|
+  // #completionTest(7,8) -> symbolsPlusAccount2
+//@[48:50) NewLine |\r\n|
   name: account.name
 //@[2:6) Identifier |name|
 //@[6:7) Colon |:|
