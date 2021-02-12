@@ -112,6 +112,20 @@
     }
   },
   {
+    "label": "account",
+    "kind": "variable",
+    "detail": "account",
+    "deprecated": false,
+    "preselect": false,
+    "sortText": "2_account",
+    "insertTextFormat": "plainText",
+    "insertTextMode": "asIs",
+    "textEdit": {
+      "range": {},
+      "newText": "account"
+    }
+  },
+  {
     "label": "any",
     "kind": "function",
     "detail": "any()",

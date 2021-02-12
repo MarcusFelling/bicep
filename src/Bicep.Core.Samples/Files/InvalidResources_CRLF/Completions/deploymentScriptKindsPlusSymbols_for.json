@@ -3176,6 +3176,20 @@
     }
   },
   {
+    "label": "thing",
+    "kind": "variable",
+    "detail": "thing",
+    "deprecated": false,
+    "preselect": false,
+    "sortText": "2_thing",
+    "insertTextFormat": "plainText",
+    "insertTextMode": "asIs",
+    "textEdit": {
+      "range": {},
+      "newText": "thing"
+    }
+  },
+  {
     "label": "toLower",
     "kind": "function",
     "detail": "toLower()",
