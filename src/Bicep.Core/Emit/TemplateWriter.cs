@@ -450,13 +450,33 @@ namespace Bicep.Core.Emit
                 switch (dependency.Resource)
                 {
                     case ResourceSymbol resourceDependency:
+                        if (resourceDependency.IsCollection && dependency.IndexExpression == null)
+                        {
+                            // dependency is on the entire resource collection
+                            // write the name of the resource collection as the dependency
+                            writer.WriteValue(resourceDependency.DeclaringResource.Name.IdentifierName);
+
+                            break;
+                        }
+
                         if (!resourceDependency.DeclaringResource.IsExistingResource())
                         {
                             emitter.EmitResourceIdReference(resourceDependency);
                         }
+
                         break;
                     case ModuleSymbol moduleDependency:
+                        if (moduleDependency.IsCollection && dependency.IndexExpression == null)
+                        {
+                            // dependency is on the entire module collection
+                            // write the name of the module collection as the dependency
+                            writer.WriteValue(moduleDependency.DeclaringModule.Name.IdentifierName);
+
+                            break;
+                        }
+                        
                         emitter.EmitResourceIdReference(moduleDependency);
+                        
                         break;
                     default:
                         throw new InvalidOperationException($"Found dependency '{dependency.Resource.Name}' of unexpected type {dependency.GetType()}");

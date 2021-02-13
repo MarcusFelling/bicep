@@ -17,8 +17,6 @@ namespace Bicep.Core.Emit
 
         public DeclaredSymbol Resource { get; }
 
-        public bool IsCollectionDependency => this.IndexExpression is not null;
-
         /// <summary>
         /// The optional index expression to address a single Target resource when the Target represents a collection of resources.
         /// </summary>

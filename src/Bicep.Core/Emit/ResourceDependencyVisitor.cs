@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
+using Bicep.Core.Extensions;
 using Bicep.Core.Semantics;
 using Bicep.Core.Syntax;
 
@@ -22,17 +24,21 @@ namespace Bicep.Core.Emit
             var output = new Dictionary<DeclaredSymbol, ImmutableHashSet<ResourceDependency>>();
             foreach (var kvp in visitor.resourceDependencies)
             {
-                if (kvp.Key is ResourceSymbol resourceSymbol)
+                if (kvp.Key is ResourceSymbol || kvp.Key is ModuleSymbol)
                 {
-                    output[resourceSymbol] = kvp.Value.ToImmutableHashSet();
-                }
-                if (kvp.Key is ModuleSymbol moduleSymbol)
-                {
-                    output[moduleSymbol] = kvp.Value.ToImmutableHashSet();
+                    output[kvp.Key] = OptimizeDependencies(kvp.Value);
                 }
             }
             return output.ToImmutableDictionary();
         }
+
+        private static ImmutableHashSet<ResourceDependency> OptimizeDependencies(HashSet<ResourceDependency> dependencies) =>
+            dependencies
+                .GroupBy(dep => dep.Resource)
+                .SelectMany(group => @group.FirstOrDefault(dep => dep.IndexExpression == null) is { } dependencyWithoutIndex
+                    ? dependencyWithoutIndex.AsEnumerable()
+                    : @group)
+                .ToImmutableHashSet();
 
         private ResourceDependencyVisitor(SemanticModel model)
         {
@@ -103,6 +109,12 @@ namespace Bicep.Core.Emit
 
         private void VisitVariableAccessSyntaxInternal(VariableAccessSyntax syntax)
         {
+            // local function
+            SyntaxBase? GetIndexExpression(bool isCollection) =>
+                isCollection && this.model.Binder.GetParent(syntax) is ArrayAccessSyntax arrayAccess && ReferenceEquals(arrayAccess.BaseExpression, syntax)
+                    ? arrayAccess.IndexExpression
+                    : null;
+
             if (currentDeclaration == null)
             {
                 return;
@@ -123,12 +135,15 @@ namespace Bicep.Core.Emit
                     {
                         resourceDependencies[currentDeclaration].Add(dependency);
                     }
+
                     return;
+
                 case ResourceSymbol resourceSymbol:
-                    resourceDependencies[currentDeclaration].Add(new ResourceDependency(resourceSymbol, indexExpression: null));
+                    resourceDependencies[currentDeclaration].Add(new ResourceDependency(resourceSymbol, GetIndexExpression(resourceSymbol.IsCollection)));
                     return;
+
                 case ModuleSymbol moduleSymbol:
-                    resourceDependencies[currentDeclaration].Add(new ResourceDependency(moduleSymbol, indexExpression: null));
+                    resourceDependencies[currentDeclaration].Add(new ResourceDependency(moduleSymbol, GetIndexExpression(moduleSymbol.IsCollection)));
                     return;
             }
         }
