@@ -298,8 +298,6 @@ namespace Bicep.Core.Emit
             }
             this.emitter.EmitObjectProperties((ObjectSyntax)body, ResourcePropertiesToOmit);
 
-            // dependsOn is currently not allowed as a top-level resource property in bicep
-            // we will need to revisit this and probably merge the two if we decide to allow it
             this.EmitDependsOn(resourceSymbol);
 
             writer.WriteEndObject();
@@ -447,9 +445,9 @@ namespace Bicep.Core.Emit
             writer.WritePropertyName("dependsOn");
             writer.WriteStartArray();
             // need to put dependencies in a deterministic order to generate a deterministic template
-            foreach (var dependency in dependencies.OrderBy(x => x.Name))
+            foreach (var dependency in dependencies.OrderBy(x => x.Resource.Name))
             {
-                switch (dependency)
+                switch (dependency.Resource)
                 {
                     case ResourceSymbol resourceDependency:
                         if (!resourceDependency.DeclaringResource.IsExistingResource())
@@ -461,7 +459,7 @@ namespace Bicep.Core.Emit
                         emitter.EmitResourceIdReference(moduleDependency);
                         break;
                     default:
-                        throw new InvalidOperationException($"Found dependency '{dependency.Name}' of unexpected type {dependency.GetType()}");
+                        throw new InvalidOperationException($"Found dependency '{dependency.Resource.Name}' of unexpected type {dependency.GetType()}");
                 }
             }
             writer.WriteEndArray();

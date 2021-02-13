@@ -11,15 +11,15 @@ namespace Bicep.Core.Emit
     public class ResourceDependencyVisitor : SyntaxVisitor
     {
         private readonly SemanticModel model;
-        private IDictionary<DeclaredSymbol, HashSet<DeclaredSymbol>> resourceDependencies;
+        private readonly IDictionary<DeclaredSymbol, HashSet<ResourceDependency>> resourceDependencies;
         private DeclaredSymbol? currentDeclaration;
 
-        public static ImmutableDictionary<DeclaredSymbol, ImmutableHashSet<DeclaredSymbol>> GetResourceDependencies(SemanticModel model)
+        public static ImmutableDictionary<DeclaredSymbol, ImmutableHashSet<ResourceDependency>> GetResourceDependencies(SemanticModel model)
         {
             var visitor = new ResourceDependencyVisitor(model);
             visitor.Visit(model.Root.Syntax);
 
-            var output = new Dictionary<DeclaredSymbol, ImmutableHashSet<DeclaredSymbol>>();
+            var output = new Dictionary<DeclaredSymbol, ImmutableHashSet<ResourceDependency>>();
             foreach (var kvp in visitor.resourceDependencies)
             {
                 if (kvp.Key is ResourceSymbol resourceSymbol)
@@ -37,7 +37,7 @@ namespace Bicep.Core.Emit
         private ResourceDependencyVisitor(SemanticModel model)
         {
             this.model = model;
-            this.resourceDependencies = new Dictionary<DeclaredSymbol, HashSet<DeclaredSymbol>>();
+            this.resourceDependencies = new Dictionary<DeclaredSymbol, HashSet<ResourceDependency>>();
             this.currentDeclaration = null;
         }
 
@@ -52,7 +52,7 @@ namespace Bicep.Core.Emit
             var prevDeclaration = this.currentDeclaration;
 
             this.currentDeclaration = resourceSymbol;
-            this.resourceDependencies[resourceSymbol] = new HashSet<DeclaredSymbol>();
+            this.resourceDependencies[resourceSymbol] = new HashSet<ResourceDependency>();
             base.VisitResourceDeclarationSyntax(syntax);
 
             // restore previous declaration
@@ -70,7 +70,7 @@ namespace Bicep.Core.Emit
             var prevDeclaration = this.currentDeclaration;
 
             this.currentDeclaration = moduleSymbol;
-            this.resourceDependencies[moduleSymbol] = new HashSet<DeclaredSymbol>();
+            this.resourceDependencies[moduleSymbol] = new HashSet<ResourceDependency>();
             base.VisitModuleDeclarationSyntax(syntax);
 
             // restore previous declaration
@@ -88,7 +88,7 @@ namespace Bicep.Core.Emit
             var prevDeclaration = this.currentDeclaration;
 
             this.currentDeclaration = variableSymbol;
-            this.resourceDependencies[variableSymbol] = new HashSet<DeclaredSymbol>();
+            this.resourceDependencies[variableSymbol] = new HashSet<ResourceDependency>();
             base.VisitVariableDeclarationSyntax(syntax);
 
             // restore previous declaration
@@ -125,10 +125,10 @@ namespace Bicep.Core.Emit
                     }
                     return;
                 case ResourceSymbol resourceSymbol:
-                    resourceDependencies[currentDeclaration].Add(resourceSymbol);
+                    resourceDependencies[currentDeclaration].Add(new ResourceDependency(resourceSymbol, indexExpression: null));
                     return;
                 case ModuleSymbol moduleSymbol:
-                    resourceDependencies[currentDeclaration].Add(moduleSymbol);
+                    resourceDependencies[currentDeclaration].Add(new ResourceDependency(moduleSymbol, indexExpression: null));
                     return;
             }
         }
