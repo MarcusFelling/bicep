@@ -183,7 +183,9 @@ namespace Bicep.Core.Emit
 
         private LanguageExpression GenerateScopedResourceId(ResourceSymbol resourceSymbol, ResourceScope? targetScope)
         {
-            var typeReference = EmitHelpers.GetSingleResourceTypeReference(resourceSymbol);
+            var typeReference = resourceSymbol.IsCollection
+                ? EmitHelpers.GetResourceCollectionTypeReference(resourceSymbol)
+                : EmitHelpers.GetSingleResourceTypeReference(resourceSymbol);
             var nameSegments = GetResourceNameSegments(resourceSymbol, typeReference);
 
             if (!context.ResourceScopeData.TryGetValue(resourceSymbol, out var scopeData))
