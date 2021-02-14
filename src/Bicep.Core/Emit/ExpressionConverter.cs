@@ -84,47 +84,10 @@ namespace Bicep.Core.Emit
                         instanceFunctionCall.Arguments.Select(a => ConvertExpression(a.Expression)));
 
                 case ArrayAccessSyntax arrayAccess:
-                    return AppendProperties(
-                        ToFunctionExpression(arrayAccess.BaseExpression),
-                        ConvertExpression(arrayAccess.IndexExpression));
+                    return ConvertArrayAccess(arrayAccess);
 
                 case PropertyAccessSyntax propertyAccess:
-                    if (propertyAccess.BaseExpression is VariableAccessSyntax propVariableAccess &&
-                        context.SemanticModel.GetSymbolInfo(propVariableAccess) is ResourceSymbol resourceSymbol)
-                    {
-                        // special cases for certain resource property access. if we recurse normally, we'll end up
-                        // generating statements like reference(resourceId(...)).id which are not accepted by ARM
-
-                        var typeReference = EmitHelpers.GetSingleResourceTypeReference(resourceSymbol);
-                        switch (propertyAccess.PropertyName.IdentifierName)
-                        {
-                            case "id":
-                                return GetLocallyScopedResourceId(resourceSymbol);
-                            case "name":
-                                return GetResourceNameExpression(resourceSymbol);
-                            case "type":
-                                return new JTokenExpression(typeReference.FullyQualifiedType);
-                            case "apiVersion":
-                                return new JTokenExpression(typeReference.ApiVersion);
-                            case "properties":
-                                // use the reference() overload without "full" to generate a shorter expression
-                                return GetReferenceExpression(resourceSymbol, typeReference, false);
-                        }
-                    }
-
-                    var moduleAccess = TryGetModulePropertyAccess(propertyAccess);
-                    if (moduleAccess != null)
-                    {
-                        var (moduleSymbol, outputName) = moduleAccess.Value;
-                        return AppendProperties(
-                            GetModuleOutputsReferenceExpression(moduleSymbol),
-                            new JTokenExpression(outputName),
-                            new JTokenExpression("value"));
-                    }
-
-                    return AppendProperties(
-                        ToFunctionExpression(propertyAccess.BaseExpression),
-                        new JTokenExpression(propertyAccess.PropertyName.IdentifierName));
+                    return ConvertPropertyAccess(propertyAccess);
 
                 case VariableAccessSyntax variableAccess:
                     return ConvertVariableAccess(variableAccess);
@@ -134,21 +97,92 @@ namespace Bicep.Core.Emit
             }
         }
 
+        private LanguageExpression ConvertArrayAccess(ArrayAccessSyntax arrayAccess)
+        {
+            // if there is an array access on a resource/module reference, we have to generate differently
+            // when constructing the reference() function call, the resource name expression needs to have its local
+            // variable replaced with <loop array expression>[this array access' index expression]
+            if (arrayAccess.BaseExpression is VariableAccessSyntax variableAccess)
+            {
+                switch (this.context.SemanticModel.GetSymbolInfo(variableAccess))
+                {
+                    case ResourceSymbol {IsCollection: true}:
+                        // TODO: Replace loop index correctly
+                        return ToFunctionExpression(arrayAccess.BaseExpression);
+
+                    case ModuleSymbol { IsCollection: true }:
+                        // TODO: Replace loop index correctly
+                        return ToFunctionExpression(arrayAccess.BaseExpression);
+                }
+            }
+
+            return AppendProperties(
+                ToFunctionExpression(arrayAccess.BaseExpression),
+                ConvertExpression(arrayAccess.IndexExpression));
+        }
+
+        private LanguageExpression ConvertPropertyAccess(PropertyAccessSyntax propertyAccess)
+        {
+            if (propertyAccess.BaseExpression is VariableAccessSyntax propVariableAccess &&
+                context.SemanticModel.GetSymbolInfo(propVariableAccess) is ResourceSymbol resourceSymbol)
+            {
+                // special cases for certain resource property access. if we recurse normally, we'll end up
+                // generating statements like reference(resourceId(...)).id which are not accepted by ARM
+
+                var typeReference = EmitHelpers.GetSingleResourceTypeReference(resourceSymbol);
+                switch (propertyAccess.PropertyName.IdentifierName)
+                {
+                    case "id":
+                        return GetLocallyScopedResourceId(resourceSymbol);
+                    case "name":
+                        return GetResourceNameExpression(resourceSymbol);
+                    case "type":
+                        return new JTokenExpression(typeReference.FullyQualifiedType);
+                    case "apiVersion":
+                        return new JTokenExpression(typeReference.ApiVersion);
+                    case "properties":
+                        // use the reference() overload without "full" to generate a shorter expression
+                        return GetReferenceExpression(resourceSymbol, typeReference, false);
+                }
+            }
+
+            var moduleAccess = TryGetModulePropertyAccess(propertyAccess);
+            if (moduleAccess != null)
+            {
+                var (moduleSymbol, outputName) = moduleAccess.Value;
+                return AppendProperties(
+                    GetModuleOutputsReferenceExpression(moduleSymbol),
+                    new JTokenExpression(outputName),
+                    new JTokenExpression("value"));
+            }
+
+            return AppendProperties(
+                ToFunctionExpression(propertyAccess.BaseExpression),
+                new JTokenExpression(propertyAccess.PropertyName.IdentifierName));
+        }
+
         private (ModuleSymbol moduleSymbol, string outputName)? TryGetModulePropertyAccess(PropertyAccessSyntax propertyAccess)
         {
             // is this a (<child>.outputs).<prop> propertyAccess?
-            if (!(propertyAccess.BaseExpression is PropertyAccessSyntax childPropertyAccess) || childPropertyAccess.PropertyName.IdentifierName != LanguageConstants.ModuleOutputsPropertyName)
+            if (propertyAccess.BaseExpression is PropertyAccessSyntax childPropertyAccess && childPropertyAccess.PropertyName.IdentifierName == LanguageConstants.ModuleOutputsPropertyName)
             {
-                return null;
+                // is <child> a variable which points to a module symbol?
+                if (childPropertyAccess.BaseExpression is VariableAccessSyntax grandChildVariableAccess && 
+                    context.SemanticModel.GetSymbolInfo(grandChildVariableAccess) is ModuleSymbol {IsCollection: false} moduleSymbol)
+                {
+                    return (moduleSymbol, propertyAccess.PropertyName.IdentifierName);
+                }
+
+                // is <child> an array access operating on a module collection
+                if (childPropertyAccess.BaseExpression is ArrayAccessSyntax grandChildArrayAccess &&
+                    grandChildArrayAccess.BaseExpression is VariableAccessSyntax grandGrandChildVariableAccess &&
+                    context.SemanticModel.GetSymbolInfo(grandGrandChildVariableAccess) is ModuleSymbol {IsCollection: true} moduleCollectionSymbol)
+                {
+                    return (moduleCollectionSymbol, propertyAccess.PropertyName.IdentifierName);
+                }
             }
 
-            // is <child> a variable which points to a module symbol?
-            if (!(childPropertyAccess.BaseExpression is VariableAccessSyntax grandChildVariableAccess) || !(context.SemanticModel.GetSymbolInfo(grandChildVariableAccess) is ModuleSymbol moduleSymbol))
-            {
-                return null;
-            }
-
-            return (moduleSymbol, propertyAccess.PropertyName.IdentifierName);
+            return null;
         }
 
         private LanguageExpression GetResourceNameExpression(ResourceSymbol resourceSymbol)
@@ -297,7 +331,9 @@ namespace Bicep.Core.Emit
                     return CreateFunction("variables", new JTokenExpression(name));
 
                 case ResourceSymbol resourceSymbol:
-                    var typeReference = EmitHelpers.GetSingleResourceTypeReference(resourceSymbol);
+                    var typeReference = resourceSymbol.IsCollection
+                        ? EmitHelpers.GetResourceCollectionTypeReference(resourceSymbol)
+                        : EmitHelpers.GetSingleResourceTypeReference(resourceSymbol);
                     return GetReferenceExpression(resourceSymbol, typeReference, true);
 
                 case ModuleSymbol moduleSymbol:
