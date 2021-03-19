@@ -28,7 +28,7 @@ namespace Bicep.Core.Emit
             return new EmitLimitationInfo(diagnosticWriter.GetDiagnostics(), moduleScopeData, resourceScopeData);
         }
 
-        private static IEnumerable<Diagnostic> DetectDuplicateNames(SemanticModel semanticModel, ImmutableDictionary<ResourceSymbol, ScopeHelper.ScopeData> resourceScopeData, ImmutableDictionary<ModuleSymbol, ScopeHelper.ScopeData> moduleScopeData)
+        private static IEnumerable<IDiagnostic> DetectDuplicateNames(SemanticModel semanticModel, ImmutableDictionary<ResourceSymbol, ScopeHelper.ScopeData> resourceScopeData, ImmutableDictionary<ModuleSymbol, ScopeHelper.ScopeData> moduleScopeData)
         {
             // This method only checks, if in one deployment we do not have 2 or more resources with this same name in one deployment to avoid template validation error
             // This will not check resource constraints such as necessity of having unique virtual network names within resource group

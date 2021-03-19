@@ -296,7 +296,7 @@ namespace Bicep.Core.Syntax
                 return syntax;
             }
 
-            return new ProgramSyntax(children, endOfFile, Enumerable.Empty<Diagnostic>());
+            return new ProgramSyntax(children, endOfFile, Enumerable.Empty<IDiagnostic>());
         }
         void ISyntaxVisitor.VisitProgramSyntax(ProgramSyntax syntax) => ReplaceCurrent(syntax, ReplaceProgramSyntax);
 
@@ -335,7 +335,7 @@ namespace Bicep.Core.Syntax
                 return syntax;
             }
 
-            return new SkippedTriviaSyntax(new TextSpan(0, 0), elements, Enumerable.Empty<Diagnostic>());
+            return new SkippedTriviaSyntax(new TextSpan(0, 0), elements, Enumerable.Empty<IDiagnostic>());
         }
         void ISyntaxVisitor.VisitSkippedTriviaSyntax(SkippedTriviaSyntax syntax) => ReplaceCurrent(syntax, ReplaceSkippedTriviaSyntax);
 
