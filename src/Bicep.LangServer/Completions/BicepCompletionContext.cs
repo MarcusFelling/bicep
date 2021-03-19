@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -390,54 +390,23 @@ namespace Bicep.LanguageServer.Completions
             return false;
         }
 
-        private static bool IsPropertyValueContext(List<SyntaxBase> matchingNodes, (ObjectPropertySyntax? node, int index) propertyInfo)
-        {
-            // find the innermost property
-            if (propertyInfo.node == null)
-            {
-                // none of the nodes are object properties,
-                // so we can't possibly be in a property value context
-                return false;
-            }
+        private static bool IsPropertyValueContext(List<SyntaxBase> matchingNodes, (ObjectPropertySyntax? node, int index) propertyInfo) =>
+            propertyInfo.node != null &&
+                (
+                // the cursor position may be in the trivia following the colon that follows the property name
+                // if that's the case, the offset should match the end of the property span exactly
+                SyntaxMatcher.IsTailMatch<ObjectPropertySyntax>(matchingNodes, _ => true) ||
 
-            switch (matchingNodes[^1])
-            {
-                case ObjectPropertySyntax _:
-                    // the cursor position may be in the trivia following the colon that follows the property name
-                    // if that's the case, the offset should match the end of the property span exactly
-                    return true;
+                // the cursor position is after the colon that follows the property name
+                SyntaxMatcher.IsTailMatch<ObjectPropertySyntax, Token>(matchingNodes, (_, token) => token.Type == TokenType.Colon) ||
 
-                case Token token:
-                    // how many matching nodes remain including the object node itself
-                    int nodeCount = matchingNodes.Count - propertyInfo.index;
+                // the cursor is inside a string value of the property
+                SyntaxMatcher.IsTailMatch<ObjectPropertySyntax, StringSyntax, Token>(matchingNodes, (property, stringSyntax, token) => ReferenceEquals(property.Value, stringSyntax)) ||
 
-                    switch (nodeCount)
-                    {
-                        case 2 when token.Type == TokenType.Colon:
-                        {
-                            // the cursor position is after the colon that follows the property name
-                            return true;
-                        }
-
-                        case 3 when matchingNodes[^2] is StringSyntax stringSyntax && ReferenceEquals(propertyInfo.node.Value, stringSyntax):
-                        {
-                            // the cursor is inside a string value of the property
-                            return true;
-                        }
-
-                        case 4 when matchingNodes[^2] is IdentifierSyntax identifier && ReferenceEquals(propertyInfo.node.Value, identifier):
-                        {
-                            // the cursor could is a partial or full identifier
-                            // which will present as either a keyword or identifier token
-                            return true;
-                        }
-                    }
-
-                    break;
-            }
-
-            return false;
-        }
+                // the cursor could is a partial or full identifier
+                // which will present as either a keyword or identifier token
+                SyntaxMatcher.IsTailMatch<ObjectPropertySyntax, VariableAccessSyntax, IdentifierSyntax, Token>(matchingNodes, (property, variableAccess, identifier, token) => ReferenceEquals(property.Value, variableAccess))
+                );
 
         private static bool IsArrayItemContext(List<SyntaxBase> matchingNodes, (ArraySyntax? node, int index) arrayInfo)
         {
@@ -571,7 +540,24 @@ namespace Bicep.LanguageServer.Completions
         /// Determines if we are inside an expression. Will not produce a correct result if context kind is set is already set to something.
         /// </summary>
         /// <param name="matchingNodes">The matching nodes</param>
-        private static bool IsInnerExpressionContext(List<SyntaxBase> matchingNodes) => matchingNodes.OfType<ExpressionSyntax>().Any();
+        private static bool IsInnerExpressionContext(List<SyntaxBase> matchingNodes)
+        {
+            var isInStringSegment = SyntaxMatcher.IsTailMatch<StringSyntax, Token>(matchingNodes, (_, token) => token.Type switch {
+                TokenType.StringComplete => true,
+                TokenType.StringLeftPiece => true,
+                TokenType.StringMiddlePiece => true,
+                TokenType.StringRightPiece => true,
+                TokenType.MultilineString => true,
+                _ => false,
+            });
+
+            if (isInStringSegment)
+            {
+                return false;
+            }
+
+            return matchingNodes.OfType<ExpressionSyntax>().Any();
+        }
 
         private static Range GetReplacementRange(SyntaxTree syntaxTree, SyntaxBase innermostMatchingNode, int offset)
         {
